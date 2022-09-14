@@ -16,12 +16,15 @@ const axios = require('axios');
 const atCoderDataUpdate = require('./dataUpdate/atcoder');
 const codechefDataUpdate = require('./dataUpdate/codechef');
 const codeforcesDataUpdate = require('./dataUpdate/codeforces');
+const tpcUpdate = require('./dataUpdate/tpc');
+const leetcodeUpdate = require('./dataUpdate/leetcode');
 const codeforcesNotification = require('./functions/codeforces');
 const codechefNotification = require('./functions/codechef');
 const addendpoint = require('./functions/addEndpoint');
 const deleteEndpoint = require('./functions/deleteEndpoint');
-const { channel } = require('diagnostics_channel');
+const fs = require('fs');
 
+//Voluntary application server identity
 
 require('dotenv').config({ path: __dirname + '/config.env' });
 const private_keys = process.env.PRIVATE_KEY;
@@ -30,19 +33,18 @@ const public_keys = 'BIVj4YrGKo27YGVRf4oGmWEuQmKP3RU4-hpqYgiOA1euhIxTGww0tRira53
 webpush.setVapidDetails('mailto:gyanexplode@gmail.com', public_keys, private_keys);
 
 const staticPath = path.join(__dirname, '/client');
-app.set('view engine', 'ejs');
+
 app.use(express.static(staticPath));
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
-app.get('/', (req, res) => {
+app.post('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'client/index.html'))
 })
 app.post('/subscribe', (req, res) => {
     
     const subscription = req.body.subscription;
-    const channel = req.body.channel.toString().toLowerCase().trim()+'1s'; 
-    // console.log(req.body.subscription);   
+    const channel = req.body.channel.toString().toLowerCase().trim()+'1s';      
     if (channel.length > 2) {
         addendpoint(channel,subscription,req,res);
     }
@@ -63,6 +65,20 @@ app.post('/unsubscribe', async (req, res) => {
             console.log(err);
             res.send({ "result": "Please Subscribe first" });
         }
+    }
+})
+
+app.post('/formsubmit',async(req,res)=>{
+    try{        
+        if(req.body.name.length < 2 || req.body.email == "" || req.body.comment==""){
+            res.status(400).send({"result":"Please fill carefully"});
+            return;
+        }
+        res.send({"result":"Your response has been recorded."});
+    }
+    catch(err){
+        console.log(err);
+        res.status(400).send({"result":"Some error occured."});
     }
 })
 
@@ -130,8 +146,7 @@ app.post('/sendnoti', async (req, res) => {
         res.status(400).send({ "result": "Invalid channel" });
     }
 })
-async function runThis(list , text , channel) {
-    // const list = await Schema.find();
+async function runThis(list , text , channel) {    
     console.log(list[0].subscription);
     for (var i = 0; i < list.length; i++) {                        
         const data3 =(JSON.parse(list[i].subscription));        
@@ -140,17 +155,39 @@ async function runThis(list , text , channel) {
     }
 }
 
+//********************** */ api service ***************************************
+
+app.get('/api/:platform',async(req,res)=>{
+    try{
+        const platform = req.params.platform;
+        res.sendFile(path.join(__dirname,'./json',`${platform}.json`));               
+    }
+    catch(err){
+        console.log(err);
+        res.send({"data":"Nothing found" , "error":"Some error occured"});
+    }
+
+})
+
+//************************************************************************** */
+
 //Calling json file creater function
 const callingFun = async () => {
     try {
         atCoderDataUpdate();
         codechefDataUpdate();
         codeforcesDataUpdate();
+        leetcodeUpdate();        
         setInterval(async () => {
             atCoderDataUpdate();
             codechefDataUpdate();
             codeforcesDataUpdate();
-        }, 180000)       
+            leetcodeUpdate();
+        }, 180000);
+        setInterval(async()=>{
+            tpcUpdate();
+            // console.log('here');
+        },1500000);       
     }
     catch (err) {
         console.log(err);
@@ -162,13 +199,12 @@ function timeToAlert() {
     codeforcesNotification();
     codechefNotification();
 }
-const alertFun = function () {
-    // console.log('alert fun activate');
+const alertFun = function () {    
     timeToAlert();
     setTimeout(function () {
         console.log('setTimeout complete');
         alertFun();
-    }, 600000)
+    }, 600000)    
 }
 alertFun();
 
@@ -182,4 +218,4 @@ app.get('*',function(req,res){
 })
 
 const port = process.env.PORT || 5001;
-app.listen(port, () => console.log('Server started'));
+app.listen(port, () => console.log(`Server started at ${5001}`));

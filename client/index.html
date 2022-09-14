@@ -258,21 +258,28 @@
   <!-- <h4>What we offer</h4> -->
   <br>
   <div class="row slideanim">
-    <div class="col-sm-4">
+    <div class="col-sm-3">
       <a href="./codechef/codechef.html" style="color:black">
         <span class="iconify" data-icon="simple-icons:codechef"   data-width="100" data-height="100"></span>
         <h4>CODECHEF</h4>
       </a>
     
     </div>
-    <div class="col-sm-4">
+    <div class="col-sm-3">
       <a href="./codeforces/codeforces.html" style="color:black">
         <span class="iconify" data-icon="simple-icons:codeforces"  data-width="100" data-height="100"></span>
         <h4>CODEFORCES</h4>
       </a>
       <!-- <p>Lorem ipsum dolor sit amet..</p> -->
     </div>
-    <div class="col-sm-4">
+    <div class="col-sm-3">
+      <a href="./leetcode/leetcode.html" style="color:black">
+        <img src="https://leetcode.com/static/images/LeetCode_logo.png" style="width:118px" a="atcoder icon">
+        <h4>LEETCODE</h4>
+      </a>
+      <!-- <p>Lorem ipsum dolor sit amet..</p> -->
+    </div>
+    <div class="col-sm-3">
       <a href="./atcoder/atcoder.html" style="color:black">
         <img src="https://img.atcoder.jp/assets/atcoder.png" style="width:118px" a="atcoder icon">
         <h4>ATCODER</h4>
@@ -293,21 +300,23 @@
       <p><span class="glyphicon glyphicon-map-marker"></span> Haryana, India</p>      
     </div>
     <div class="col-sm-7 slideanim">
-      <div class="row">
-        <div class="col-sm-6 form-group">
-          <input class="form-control" id="name" name="name" placeholder="Name" type="text" required>
+      <form id="contactform">
+        <div class="row">
+          <div class="col-sm-6 form-group">
+            <input class="form-control" id="name" name="name" placeholder="Name" type="text" required>
+          </div>
+          <div class="col-sm-6 form-group">
+            <input class="form-control" id="email" name="email" placeholder="Email" type="email" required>
+          </div>
         </div>
-        <div class="col-sm-6 form-group">
-          <input class="form-control" id="email" name="email" placeholder="Email" type="email" required>
+        <textarea class="form-control" id="comments" name="comments" placeholder="Comment" rows="5"></textarea><br>
+        <div class="row">
+          <div class="col-sm-12 form-group">
+            <p id="noti"></p>
+            <button id="contact" class="btn btn-default pull-right" type="submit">Send</button>
+          </div>
         </div>
-      </div>
-      <textarea class="form-control" id="comments" name="comments" placeholder="Comment" rows="5"></textarea><br>
-      <div class="row">
-        <div class="col-sm-12 form-group">
-          <p id="noti"></p>
-          <button id="contact" class="btn btn-default pull-right" type="submit">Send</button>
-        </div>
-      </div>
+      </form>
     </div>
   </div>
 </div>
@@ -323,6 +332,7 @@
 $(document).ready(function(){
   // Add smooth scrolling to all links in navbar + footer link
   $(".navbar a, footer a[href='#myPage']").on('click', function(event) {
+    console.log(event);
     // Make sure this.hash has a value before overriding default behavior
     if (this.hash !== "") {
       // Prevent default anchor click behavior
@@ -330,7 +340,7 @@ $(document).ready(function(){
 
       // Store hash
       var hash = this.hash;
-
+      console.log(hash);
       // Using jQuery's animate() method to add smooth page scroll
       // The optional number (900) specifies the number of milliseconds it takes to scroll to the specified area
       $('html, body').animate({
@@ -359,25 +369,53 @@ $(document).ready(function(){
   document.getElementById('navBtn').addEventListener('click',function(){
     document.getElementById('phone').classList.toggle('hide');
   })
+  const name = document.getElementById('name');
+  const email = document.getElementById('email');
+  const comment = document.getElementById('comments');
+  const noti =  document.getElementById('noti');
 
   
   const clear = async()=>{
-    const name = document.getElementById('name');
-    const email = document.getElementById('email');
-    const comment = document.getElementById('comments');
     if(name.value == "" || email.value=="" || comment.value==""){
       document.getElementById('noti').innerText="Please fill carefully";
       return;
     }
     name.value="";
     email.value="";
-    comment.value="";
-    document.getElementById('noti').innerText="We will contact you soon";
+    comment.value="";    
   }
-  document.getElementById('contact').addEventListener('click',clear);
+  document.getElementById('contactform').addEventListener('submit',function(e){
+    e.preventDefault();
+    if(name.value == "" || email.value=="" || comment.value==""){
+      document.getElementById('noti').innerText="Please fill carefully";
+      return;
+    }
+    fetch("/formsubmit", {
+            method: "POST",
+            headers: {
+              "Content-type": "application/json",
+            },
+            body: JSON.stringify({
+              'name': name.value.toString(),
+              'email': email.value.toString(),
+              'comment': comment.value.toString(),
+            }),
+          })
+          .then((resp)=>{            
+            return resp.json();
+          })
+          .then((data)=>{
+            noti.innerText= `${data.result}`;
+            noti.innerHTML += `<br>We will contact you soon.`;
+            clear();
+          })
+  });
   
 </script>
-  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+crossorigin="anonymous"
+></script>
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.7/dist/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
